@@ -291,6 +291,7 @@ void Elemento::clear()
 void Elemento::set_null(bool clearold)
 {
     if (clearold) clear();
+    else tipo=JJSON_Null;
 }
 void Elemento::set_string(string* s,bool clearold)
 {
