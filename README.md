@@ -73,7 +73,7 @@ The JJSON class has only static members, and you shouldn't create an instance of
 * **copy()**: makes a copy (clone) of the actual node. It also copies its element.
 * **toString()**: Prints the node and its element in JSON string format. 
 
-###Raiz (array of nodes)
+### Raiz (array of nodes)
 ##### Java and C++
 * **Array/vector<Nodo> nodos**:
 * **find(string s)**: finds a Node by its name and returns it
