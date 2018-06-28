@@ -52,6 +52,11 @@ The JJSON class has only static members, and you shouldn't create an instance of
 * boolean **JJSON_Integers**: if true, JSON numbers are read as integers.
 * Elemento **parse(string json)**: returns a JJSON element from a JSON string.
 
+In hava version you also have:
+
+* int **JJSON\_Bad\_Int**: default value parsed when a JSON integer has wrong format. Example: `"number":-53+3+64`
+* float **JJSON\_Bad\_Float**: default value parsed when a JSON float has wrong format. Example: `"number":53.6.4+34`
+
 ### Constructors (to generate new JSON content)
 
 * **Raiz()**: it takes a Node array(Java) / vector(C++) that you should create first.
@@ -121,11 +126,14 @@ If you use the **remove()** function instead of **del()**, you must clear and de
 In the Elemento class, every kind of data is stored in the **void\* elemento** variable, it doesn't matter if they are pointers, or numbers. This saves a lot of memory in big JSONs when comparing to the Java version, but if you don't check **get_tipo()** and read an incorrect type of data, you will read garbage instead of **null**.
 
 ## Reliability
-If a malformed JSON string is passed to the lib, it would try to process it after the end of the string throwing an exception that should be captured.
+If a malformed JSON string is passed to the lib, it will try to auto-complete it at the end of the string returning a JSON object that may differ from the expected one.
+
+Java and C++ return different values for incorrect number fields in the JSON, like `"number":-53+3+64`.
+In this example, C++ parses `"number":-53` and Java parses `"number":JJSON_Bad_Int/Float`. This is because C++ atoi and stoi functions doesn't throw exceptions and gives results for the malformed number strings, while Java throws *StringIndexOutOfBoundsException* that is catched by the lib returning these predefined values.
 
 Any JSON element starting with **t**,**f**,or **n** will be read as **true**, **false**, and **null**. Why to lose processing time checking undefined values?
 
-The lib has been slightly tested. It should not have bugs, but who knows.
+The lib has been slightly tested and it should not have bugs, but nothing is impossible.
 
 ## License
 JJSON was mainly made for personal use. Try it for yourself and if you like it, contact me to find it a proper license.

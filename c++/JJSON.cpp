@@ -1,5 +1,7 @@
 #include "JJSON.h"
 #include <sstream>
+#include <cstdlib>
+#include <stdexcept>
 
 ////////////////
 //JJSON
@@ -11,22 +13,34 @@ int JJSON::position;
 string JJSON::getJSONstr(string json)
 {
     int initpos=position;
-    while (json.at(position)!='"')
+    try
     {
-        if (json.at(position)=='\\') position+=2;
-        else position++;
+        while (json.at(position)!='"')
+        {
+            if (json.at(position)=='\\') position+=2;
+            else position++;
+        }
+        return json.substr(initpos, (position++)-initpos);
     }
-    return json.substr(initpos, (position++)-initpos);
+    catch(const out_of_range& e)
+    {
+        return json.substr(initpos, position-initpos);
+    }
 }
 
 int JJSON::getJSONint(string json)
 {
     int initpos=position;
     char cur;
-    do {
-        cur=json.at(++position);
+    try
+    {
+        do {
+            cur=json.at(++position);
+        }
+        while (((cur>='0')&&(cur<='9')) || cur=='-' || cur=='+');
     }
-    while (((cur>='0')&&(cur<='9')) || cur=='-' || cur=='+');
+    catch(const out_of_range& e) {}
+    
     return atoi(json.substr(initpos, position-initpos).c_str());
 }
 
@@ -34,109 +48,130 @@ float JJSON::getJSONfloat(string json)
 {
     int initpos=position;
     char cur;
-    do {
-        cur=json.at(++position);
+    try
+    {
+        do {
+            cur=json.at(++position);
+        }
+        while (((cur>='0')&&(cur<='9')) || cur=='-' || cur=='+' || cur=='.');
     }
-    while (((cur>='0')&&(cur<='9')) || cur=='-' || cur=='+' || cur=='.');
+    catch(const out_of_range& e) {}
+    
     return atof(json.substr(initpos, position-initpos).c_str());
 }
 
 vector<Elemento>* JJSON::getJSONvec(string json)
 {
     vector<Elemento>* arr=new vector<Elemento>();
+    try
+    {
         while (json.at(position)!=']')
         {
             arr->push_back(getJSON(json));
             while ((json.at(position)!=',') && (json.at(position)!=']')) position++;
         }
-        return arr;
+    }
+    catch(const out_of_range& e) {}
+    return arr;
 }
 
 Raiz* JJSON::getJSONraiz(string json)
 {
     vector<Nodo> nodos;
-    while (true)
-    {
-        switch(json.at(position))
+    try {
+        while (true)
         {
-            case '"':
+            switch(json.at(position))
             {
-                position++;
-                string nombre=getJSONstr(json);
-                while (json.at(position)!=':') position++;
-                Elemento e=getJSON(json);
-                nodos.push_back(Nodo(nombre,e));
-                break;
+                case '"':
+                {
+                    position++;
+                    string nombre=getJSONstr(json);
+                    while (json.at(position)!=':') position++;
+                    Elemento e=getJSON(json);
+                    nodos.push_back(Nodo(nombre,e));
+                    break;
+                }
+                case '}':
+                {
+                    position++;
+                    return new Raiz(nodos);
+                }
+                default:
+                    position++;
             }
-            case '}':
-            {
-                position++;
-                return new Raiz(nodos);
-            }
-            default:
-                position++;
         }
+    }
+    catch(const out_of_range& e)
+    {
+        return new Raiz(nodos);
     }
 }
 
 Elemento JJSON::getJSON(string json)
 {
-    while (true)
-    {
-        switch(json.at(position))
+    try {
+        while (true)
         {
-            case '[':
+            switch(json.at(position))
             {
-                position++;
-                return Elemento(getJSONvec(json));
+                case '[':
+                {
+                    position++;
+                    return Elemento(getJSONvec(json));
+                }
+                case '{':
+                {
+                    position++;
+                    Raiz* r=getJSONraiz(json);
+                    return Elemento(r);
+                }
+                case '"':
+                {
+                    position++;
+                    return Elemento(new string(getJSONstr(json)));
+                }
+                case 't':
+                {
+                    position+=4;
+                    return Elemento(true);
+                }
+                case 'f':
+                {
+                    position+=5;
+                    return Elemento(false);
+                }
+                case 'n':
+                {
+                    position+=4;
+                    return Elemento();
+                }
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case '-':
+                case '+':
+                {
+                    if (JJSON_Integers)
+                        return Elemento(getJSONint(json));
+                    else
+                        return Elemento(getJSONfloat(json));
+                }
+                default:
+                    position++;
             }
-            case '{':
-            {
-                position++;
-                Raiz* r=getJSONraiz(json);
-                return Elemento(r);
-            }
-            case '"':
-            {
-                position++;
-                return Elemento(new string(getJSONstr(json)));
-            }
-            case 't':
-            {
-                position+=4;
-                return Elemento(true);
-            }
-            case 'f':
-            {
-                position+=5;
-                return Elemento(false);
-            }
-            case 'n':
-            {
-                position+=4;
-                return Elemento();
-            }
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case '-':
-            case '+':
-            {
-                if (JJSON_Integers)
-                    return Elemento(getJSONint(json));
-                else
-                    return Elemento(getJSONfloat(json));
-            }
-            default:
-                position++;
         }
+    }
+    catch(const out_of_range& e)
+    {
+        return Elemento();
     }
 }
 
