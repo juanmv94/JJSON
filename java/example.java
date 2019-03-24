@@ -6,7 +6,7 @@ class JSONjava {
     
     public static void main(String[] args) {
         JJSON.JJSON_Integers=true;                                                  //Leemos los números del JSON como enteros
-        String in="{ \"palabras\":[\"hola\",\"mundo\",\"lorem\",\"ipsum\"],\"procesa\":3}";
+        String in="{ \"palabras\":[\"\\\"hola\",\"mundo\\\"\",\"lorem\",\"\\nipsum\",\"noprocesa\"],\"procesa\":4}";
         Elemento obtenido = JJSON.parse(in);                                        //Leemos elemento del JSON
         
         int nelementos=obtenido.get_root().remove("procesa").elemento.get_integer(); //Obtenemos el número del nodo "procesa" y lo eliminamos
@@ -19,10 +19,11 @@ class JSONjava {
         ArrayList<Elemento> resultados=new ArrayList<>();                       //Creamos un nuevo vector de elementos JSON
         for (int i=0;i<nelementos;i++)                                          //Para "procesa" elementos del vector "palabras"...
         {
-            String palabra=elementos.remove(0).get_string();                          //Obtenemos su valor de string y lo eliminamos del vector
+            String palabra=elementos.remove(0).get_unsc_string();                          //Obtenemos su valor de string y lo eliminamos del vector
+            System.out.println("Procesando palabra: " + palabra);
             int longitud=palabra.length();                                      //En nuestro ejemplo calculamos longitud de la palabra
             ArrayList<Nodo> arrayresultado=new ArrayList<>();                   //Creamos nuevo array de nodos JSON
-            arrayresultado.add(new Nodo("palabra",new Elemento(palabra.substring(0, 3))));  //Insertamos nodo con la palabra limitada a 3 caracteres
+            arrayresultado.add(new Nodo("palabra",new Elemento(palabra.substring(0, 3),false)));  //Insertamos nodo con la palabra limitada a 3 caracteres
             arrayresultado.add(new Nodo("longitud",new Elemento(longitud)));    //Insertamos nodo con la longitud de palabra
             resultados.add(new Elemento(new Raiz(arrayresultado)));             //Insertamos en el array resultados una nueva raiz con el array de nodos
         }

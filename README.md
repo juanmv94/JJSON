@@ -52,6 +52,11 @@ The JJSON class has only static members, and you shouldn't create an instance of
 * boolean **JJSON_Integers**: if true, JSON numbers are read as integers.
 * Elemento **parse(string json)**: returns a JJSON element from a JSON string.
 
+The following JJSON funtions manages string escaping:
+
+* string **escape(string in)**: escapes a string. That means replacing for example the **"** character from a string with **\\"**. This is needed for JSON strings. The constructor for unescaped strings and the **set\_unsc\_string** function from *Elemento* calls this.
+* string **unescape(string in)**: unescapes a string. That means replacing for example **\\"** from a string with the **"** character. The **get\_unsc\_string()** function from *Elemento* calls this.
+
 In hava version you also have:
 
 * int **JJSON\_Bad\_Int**: default value parsed when a JSON integer has wrong format. Example: `"number":-53+3+64`
@@ -61,13 +66,13 @@ In hava version you also have:
 
 * **Raiz()**: it takes a Node array(Java) / vector(C++) that you should create first.
 * **Elemento()**: it's contructor can take one of its valid categories elements listed before
- * **String\*:** *"hello world"*
+ * **String\[\*\]:** *"hello world"*
  * **Number(int):** *123*
  * **Number(float):** *123.45*
  * **Vector \*:** *[Element, Element, ...]*
  * **Root \*:** *{Node, Node, ...}*
 
-(" \* " means pointer for the C++ version)
+For string constructors, the string can be escaped or not. In Java, you pass a second boolean argument "*escaped*" to the constructor, while in c++ you use the **string** constructor for unescaped strings, and the **string\*** constructor for escaped strings (this allows to easy reuse existing string pointers of escaped JSON strings, but you must be careful when clearing and don't make pointers to be deleted twice).
 
 * **Nodo()**: it takes a string, and Elemento. For C++ users, remember that a Elemento is contained in the Nodo, and it's not a pointer to it.
 
@@ -114,7 +119,7 @@ The C++ implementation of JJSON compiles with the C++98 standard.
 ##### Memory deallocation
 In C++ you need to take care of memory allocation with the Root/Element **clear()** functions.
 
-This functions clears and frees memory  for the Root/Element itself and all theirs sub-elements (if exists), and it also empties the roots and sets the elements to null. Take care that if you have a duplicated reference to one of their subelements, it won't be valid anymore, but you can use the **copy()** function to make a copy of it and their sub-elements. **clear()** is also called in the following functions.
+This functions clears and frees memory  for the Root/Element itself and all theirs sub-elements (if exists), and it also empties the roots and sets the elements to null. Take care that if you have a duplicated reference to one of their subelements, it won't be valid anymore (additionally, if there is another reference in the same JJSON, *delete* will be called twice for the same pointer. Avoid it!), but you can use the **copy()** function to make a copy of it and their sub-elements. **clear()** is also called in the following functions.
 
 * **set_\*\*\*()** functions from elemento gets and aditional boolean parameter than the Java version to specify if you want to **clear()** before changing the content.
 

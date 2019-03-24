@@ -34,6 +34,10 @@ public:
     static bool JJSON_Integers;     //Read JSON numbers as integers
     
     static Elemento parse(string json);
+    
+    //string escape utilities
+    static string* escape(string in);
+    static string unescape(string in);
 };
 
 class Raiz {
@@ -61,6 +65,7 @@ private:
 public:
     Elemento();
     Elemento(string* s);
+    Elemento(string unsc_s);
     Elemento(vector<Elemento>* a);
     Elemento(Raiz* r);
     Elemento(bool b);
@@ -70,6 +75,7 @@ public:
     
     void set_null(bool clearold);
     void set_string(string* s, bool clearold);
+    void set_unsc_string(string unsc_s, bool clearold);
     void set_vector(vector<Elemento>* a, bool clearold);
     void set_root(Raiz* r, bool clearold);
     void set_boolean(bool b, bool clearold);
@@ -77,7 +83,8 @@ public:
     void set_float(float f, bool clearold);
     
     char get_tipo();
-    string get_string();
+    string* get_string();
+    string get_unsc_string();
     vector<Elemento>* get_vector();
     Raiz* get_root();
     bool get_boolean();

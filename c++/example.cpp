@@ -6,7 +6,7 @@ using namespace std;
 int main(int argc, char** argv) {
     
     JJSON::JJSON_Integers=true;                                                                         //Leemos los números del JSON como enteros
-    string in="{ \"palabras\":[\"hola\",\"mundo\",\"lorem\",\"ipsum\"],\"procesa\":3}";
+    string in="{ \"palabras\":[\"\\\"hola\",\"mundo\\\"\",\"lorem\",\"\\nipsum\",\"noprocesa\"],\"procesa\":4}";
 
     Elemento obtenido = JJSON::parse(in);
     
@@ -24,12 +24,13 @@ int main(int argc, char** argv) {
     for (int i=0;i<nelementos;i++)                                 //Para "procesa" elementos del vector "palabras"...
     {
         vector<Elemento>::iterator it=elementos->begin();
-        string palabra=it->get_string();                          //Obtenemos su valor de string
+        string palabra=it->get_unsc_string();                     //Obtenemos su valor de string
         it->clear();                                              //Liberamos memoria del string en el vector
         elementos->erase(it);                                     //Eliminamos elemento del vector
+        cout << "Procesando palabra: " << palabra << "\n";
         int longitud=palabra.length();                                      //En nuestro ejemplo calculamos longitud de la palabra
         vector<Nodo> arrayresultado;                                       //Creamos nuevo array de nodos JSON
-        arrayresultado.push_back(Nodo("palabra",Elemento(new string(palabra.substr(0, 3)))));  //Insertamos nodo con la palabra limitada a 3 caracteres
+        arrayresultado.push_back(Nodo("palabra",Elemento(palabra.substr(0, 3))));  //Insertamos nodo con la palabra limitada a 3 caracteres
         arrayresultado.push_back(Nodo("longitud",Elemento(longitud)));    //Insertamos nodo con la longitud de palabra
         resultados->push_back(Elemento(new Raiz(arrayresultado)));             //Insertamos en el array resultados una nueva raiz con el array de nodos
     }
@@ -39,4 +40,3 @@ int main(int argc, char** argv) {
     cout << out << "\n";
     return 0;
 }
-

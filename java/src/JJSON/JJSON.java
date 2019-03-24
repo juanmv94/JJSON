@@ -133,7 +133,7 @@ public class JJSON {
                         return new Elemento(r);
                     case '"':
                         position++;
-                        return new Elemento(getJSONstr(json));
+                        return new Elemento(getJSONstr(json),true);
                     case 't':
                         position+=4;
                         return new Elemento(true);
@@ -174,5 +174,81 @@ public class JJSON {
     {
         position=0;
         return getJSON(json);
+    }
+    
+    public static String escape(String in)
+    {
+        String out = new String();
+        for (int i=0; i<in.length(); i++)
+        {
+            switch (in.charAt(i))
+            {
+                case '\r':
+                out+="\\r";
+                break;
+                case '\n':
+                out+="\\n";
+                break;
+                case '\t':
+                out+="\\t";
+                break;
+                case '\b':
+                out+="\\b";
+                break;
+                case '\f':
+                out+="\\f";
+                break;
+                case '\"':
+                out+="\\\"";
+                break;
+                case '\\':
+                out+="\\\\";
+                break;
+                default:
+                out+=in.charAt(i);
+            }
+        }
+        return out;
+    }
+    
+    public static String unescape(String in)
+    {
+        String out = new String();
+        boolean special=false;
+        for (int i=0; i<in.length(); i++)
+        {
+            if (special)
+            {
+                switch (in.charAt(i))
+                {
+                    case 'r':
+                    out+='\r';
+                    break;
+                    case 'n':
+                    out+='\n';
+                    break;
+                    case 't':
+                    out+='\t';
+                    break;
+                    case 'b':
+                    out+='\b';
+                    break;
+                    case 'f':
+                    out+='\f';
+                    break;
+                    default:
+                    out+=in.charAt(i);
+                }
+                special=false;
+            }
+            else
+            {
+                if (in.charAt(i)=='\\')
+                    special=true;
+                else
+                    out+=in.charAt(i);
+            }
+        }
+        return out;
     }
 }

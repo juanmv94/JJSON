@@ -181,6 +181,83 @@ Elemento JJSON::parse(string json)
     return getJSON(json);
 }
 
+string* JJSON::escape(string in)
+{
+    string *out = new string();
+    out->reserve(in.size());
+    for (int i=0; i<in.size(); i++)
+    {
+        switch (in[i])
+        {
+            case '\r':
+            *out+="\\r";
+            break;
+            case '\n':
+            *out+="\\n";
+            break;
+            case '\t':
+            *out+="\\t";
+            break;
+            case '\b':
+            *out+="\\b";
+            break;
+            case '\f':
+            *out+="\\f";
+            break;
+            case '\"':
+            *out+="\\\"";
+            break;
+            case '\\':
+            *out+="\\\\";
+            break;
+            default:
+            *out+=in[i];
+        }
+    }
+    return out;
+}
+string JJSON::unescape(string in)
+{
+    string out;
+    out.reserve(in.size()/2);
+    bool special=false;
+    for (int i=0; i<in.size(); i++)
+    {
+        if (special)
+        {
+            switch (in[i])
+            {
+                case 'r':
+                out+='\r';
+                break;
+                case 'n':
+                out+='\n';
+                break;
+                case 't':
+                out+='\t';
+                break;
+                case 'b':
+                out+='\b';
+                break;
+                case 'f':
+                out+='\f';
+                break;
+                default:
+                out+=in[i];
+            }
+            special=false;
+        }
+        else
+        {
+            if (in[i]=='\\')
+                special=true;
+            else
+                out+=in[i];
+        }
+    }
+    return out;
+}
+
 ////////////////
 //Raiz
 //////////////
@@ -278,6 +355,10 @@ Elemento::Elemento(string* s)
 {
     set_string(s,false);
 }
+Elemento::Elemento(string unsc_s)
+{
+    set_unsc_string(unsc_s,false);
+}
 Elemento::Elemento(vector<Elemento>* a)
 {
     set_vector(a,false);
@@ -334,6 +415,14 @@ void Elemento::set_string(string* s,bool clearold)
     tipo=JJSON_String;
     elemento=s;
 }
+
+void Elemento::set_unsc_string(string unsc_s,bool clearold)
+{
+    if (clearold) clear();
+    tipo=JJSON_String;
+    elemento=JJSON::escape(unsc_s);
+}
+
 void Elemento::set_vector(vector<Elemento>* a, bool clearold)
 {
     if (clearold) clear();
@@ -369,9 +458,13 @@ char Elemento::get_tipo()
 {
     return tipo;
 }
-string Elemento::get_string()
+string* Elemento::get_string()
 {
-    return *(string*)elemento;
+    return (string*)elemento;
+}
+string Elemento::get_unsc_string()
+{
+    return JJSON::unescape(*(string*)elemento);
 }
 vector<Elemento>* Elemento::get_vector()
 {
@@ -405,7 +498,7 @@ Elemento Elemento::copy()
         case JJSON_Boolean:
             return Elemento(get_boolean());
         case JJSON_String:
-            return Elemento(new string(get_string()));
+            return Elemento(new string(*get_string()));
         case JJSON_Root:
             return Elemento(get_root()->copy());
         case JJSON_Vector:
@@ -446,7 +539,7 @@ string Elemento::toString()
                     return "false";
             }
             case JJSON_String:
-                return "\""+get_string()+"\"";
+                return '\"'+*get_string()+'\"';
             case JJSON_Root:
                 return get_root()->toString();
             case JJSON_Vector:
@@ -456,10 +549,10 @@ string Elemento::toString()
                 if (orig->size()>0)
                 {
                     for (vector<Elemento>::iterator i=orig->begin();i!=orig->end()-1;i++)
-                        res+=i->toString()+",";
+                        res+=i->toString()+',';
                     res+=orig->at(orig->size()-1).toString();
                 }
-                res+="]";
+                res+=']';
                 return res;
             }
             case JJSON_Null:

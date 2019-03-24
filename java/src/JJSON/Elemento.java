@@ -21,7 +21,7 @@ public class Elemento {
     private char tipo=JJSON_Null;    
     
     public Elemento() {set_null();}
-    public Elemento(String s) {set_string(s);}
+    public Elemento(String s, boolean escaped) {if (escaped) set_string(s); else set_unsc_string(s);}
     public Elemento(ArrayList<Elemento> a) {set_vector(a);}
     public Elemento(Raiz r){set_root(r);}
     public Elemento(boolean b){set_boolean(b);}
@@ -30,6 +30,7 @@ public class Elemento {
     
     public void set_null() {clear();tipo=JJSON_Null;}
     public void set_string(String s) {clear(); string=s; tipo=JJSON_String;}
+    public void set_unsc_string(String unsc_s) {clear(); string=JJSON.escape(unsc_s); tipo=JJSON_String;}
     public void set_vector(ArrayList<Elemento> a) {clear(); vector=a;tipo=JJSON_Vector;}
     public void set_root(Raiz r){clear(); raiz=r;tipo=JJSON_Root;}
     public void set_boolean(boolean b){clear(); boleano=b;tipo=JJSON_Boolean;}
@@ -38,6 +39,7 @@ public class Elemento {
     
     public char get_tipo() {return tipo;}
     public String get_string() {return string;}
+    public String get_unsc_string() {return JJSON.unescape(string);}
     public ArrayList<Elemento> get_vector() {return vector;}
     public Raiz get_root(){return raiz;}
     public boolean get_boolean(){return boleano;}
@@ -55,7 +57,7 @@ public class Elemento {
             case JJSON_Boolean:
                 return new Elemento(boleano);
             case JJSON_String:
-                return new Elemento(string);
+                return new Elemento(string,true);
             case JJSON_Root:
                 return new Elemento(raiz.copy());
             case JJSON_Vector:
