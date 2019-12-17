@@ -1,47 +1,61 @@
 package JJSON;
 
 import java.util.ArrayList;
+import java.util.List;
+
+class JJSONparseData {
+	public int position=0;
+	public String json="";
+	public boolean integers=false;
+	
+	JJSONparseData(String json) {
+		this.json=json;
+	}
+	
+	JJSONparseData(String json, boolean integers) {
+		this.integers=integers;
+		this.json=json;
+	}
+}
 
 public class JJSON {
-    
-    private static int position;
-    public static boolean JJSON_Integers=false;     //Read JSON numbers as integers
+    public static String JJSON_Ident="  ";          //Space for pretty identation
     public static int JJSON_Bad_Int=0;              //Value returned for incorrect JSON number
     public static float JJSON_Bad_Float=0;          //Value returned for incorrect JSON number
     
-    private static String getJSONstr(String json)
+    private static String getJSONstr(JJSONparseData pd)
     {
-        int initpos=position;
+        int initpos=pd.position;
         try
         {
-            while (json.charAt(position)!='"')
+            while (pd.json.charAt(pd.position)!='"')
             {
-                if (json.charAt(position)=='\\') position+=2;
-                else position++;
+                if (pd.json.charAt(pd.position)=='\\') pd.position+=2;
+                else pd.position++;
             }
-            return json.substring(initpos, position++);
+            return pd.json.substring(initpos, pd.position++);
         }
         catch(StringIndexOutOfBoundsException e)
         {
-            return json.substring(initpos, position);
+            return pd.json.substring(initpos, pd.position);
         }
     }
     
-    private static int getJSONint(String json)
+    private static int getJSONint(JJSONparseData pd)
     {
-        int initpos=position;
+        int initpos=pd.position;
         char cur;
         try
         {
             do {
-                cur=json.charAt(++position);
+                cur=pd.json.charAt(++pd.position);
             }
             while (Character.isDigit(cur) || cur=='-' || cur=='+');
         }
         catch(StringIndexOutOfBoundsException e) {}
         try
         {
-            return Integer.parseInt(json.substring(initpos, position));
+            return Integer.parseInt(pd.json.substring(initpos, pd.position));
         }
         catch(NumberFormatException e)
         {
@@ -49,21 +63,21 @@ public class JJSON {
         }
     }
     
-    private static float getJSONfloat(String json)
+    private static float getJSONfloat(JJSONparseData pd)
     {
-        int initpos=position;
+        int initpos=pd.position;
         char cur;
         try
         {
             do {
-                cur=json.charAt(++position);
+                cur=pd.json.charAt(++pd.position);
             }
             while (Character.isDigit(cur) || cur=='-' || cur=='+' || cur=='.');
         }
         catch(StringIndexOutOfBoundsException e) {}
         try
         {
-            return Float.parseFloat(json.substring(initpos, position));
+            return Float.parseFloat(pd.json.substring(initpos, pd.position));
         }
         catch(NumberFormatException e)
         {
@@ -71,42 +85,42 @@ public class JJSON {
         }
     }
     
-    private static ArrayList<Elemento> getJSONvec(String json)
+    private static List<Elemento> getJSONvec(JJSONparseData pd)
     {
-        ArrayList<Elemento> arr=new ArrayList<>();
+        List<Elemento> arr=new ArrayList<>();
         try
         {
-            while (json.charAt(position)!=']')
+            while (pd.json.charAt(pd.position)!=']')
             {
-                arr.add(getJSON(json));
-                while ((json.charAt(position)!=',') && (json.charAt(position)!=']')) position++;
+                arr.add(getJSON(pd));
+                while ((pd.json.charAt(pd.position)!=',') && (pd.json.charAt(pd.position)!=']')) pd.position++;
             }
         }
         catch(StringIndexOutOfBoundsException e) {}
         return arr;   
     }
     
-    private static Raiz getJSONraiz(String json)
+    private static Raiz getJSONraiz(JJSONparseData pd)
     {
-        ArrayList<Nodo> nodos=new ArrayList<>();
+        List<Nodo> nodos=new ArrayList<>();
         try
         {
             while (true)
             {
-                switch(json.charAt(position))
+                switch(pd.json.charAt(pd.position))
                 {
                     case '"':
-                        position++;
-                        String nombre=getJSONstr(json);
-                        while (json.charAt(position)!=':') position++;
-                        Elemento e=getJSON(json);
+                    	pd.position++;
+                        String nombre=getJSONstr(pd);
+                        while (pd.json.charAt(pd.position)!=':') pd.position++;
+                        Elemento e=getJSON(pd);
                         nodos.add(new Nodo(nombre,e));
                         break;
                     case '}':
-                        position++;
+                    	pd.position++;
                         return new Raiz(nodos);
                     default:
-                        position++;
+                    	pd.position++;
                 }
             }
         }
@@ -116,32 +130,32 @@ public class JJSON {
         }
     }
     
-    private static Elemento getJSON(String json)
+    private static Elemento getJSON(JJSONparseData pd)
     {
         try
         {
             while (true)
             {
-                switch(json.charAt(position))
+                switch(pd.json.charAt(pd.position))
                 {
                     case '[':
-                        position++;
-                        return new Elemento(getJSONvec(json));
+                    	pd.position++;
+                        return new Elemento(getJSONvec(pd));
                     case '{':
-                        position++;
-                        Raiz r=getJSONraiz(json);
+                    	pd.position++;
+                        Raiz r=getJSONraiz(pd);
                         return new Elemento(r);
                     case '"':
-                        position++;
-                        return new Elemento(getJSONstr(json),true);
+                    	pd.position++;
+                        return new Elemento(getJSONstr(pd),true);
                     case 't':
-                        position+=4;
+                    	pd.position+=4;
                         return new Elemento(true);
                     case 'f':
-                        position+=5;
+                    	pd.position+=5;
                         return new Elemento(false);
                     case 'n':
-                        position+=4;
+                    	pd.position+=4;
                         return new Elemento();
                     case '0':
                     case '1':
@@ -155,12 +169,12 @@ public class JJSON {
                     case '9':
                     case '-':
                     case '+':
-                        if (JJSON.JJSON_Integers)
-                            return new Elemento(getJSONint(json));
+                        if (pd.integers)
+                            return new Elemento(getJSONint(pd));
                         else
-                            return new Elemento(getJSONfloat(json));
+                            return new Elemento(getJSONfloat(pd));
                     default:
-                        position++;
+                        pd.position++;
                 }
             }
         }
@@ -170,10 +184,14 @@ public class JJSON {
         }
     }
     
+    public static Elemento parse(String json, boolean integers)
+    {
+        return getJSON(new JJSONparseData(json, integers));
+    }
+    
     public static Elemento parse(String json)
     {
-        position=0;
-        return getJSON(json);
+    	return getJSON(new JJSONparseData(json));
     }
     
     public static String escape(String in)

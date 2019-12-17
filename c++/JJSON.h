@@ -8,11 +8,17 @@
 #define JJSON_String 1
 #define JJSON_Vector 2
 #define JJSON_Root 3
-#define JJSON_Boolean 4
+#define JJSON_bool 4
 #define JJSON_Integer 5
 #define JJSON_Float 6
 
 using namespace std;
+
+typedef struct JSONparseData {
+	int position;
+	bool integers;
+	string json;
+} JSONparseData;
 
 class JJSON;
 class Raiz;
@@ -21,18 +27,17 @@ class Elemento;
 
 class JJSON {
 private:
-    static int position;
-    
-    static string getJSONstr(string json);
-    static int getJSONint(string json);
-    static float getJSONfloat(string json);
-    static vector<Elemento>* getJSONvec(string json);
-    static Raiz* getJSONraiz(string json);
-    static Elemento getJSON(string json);
+    static string getJSONstr(JSONparseData *pd);
+    static int getJSONint(JSONparseData *pd);
+    static float getJSONfloat(JSONparseData *pd);
+    static vector<Elemento>* getJSONvec(JSONparseData *pd);
+    static Raiz* getJSONraiz(JSONparseData *pd);
+    static Elemento getJSON(JSONparseData *pd);
     
 public:
-    static bool JJSON_Integers;     //Read JSON numbers as integers
+    static string JJSON_Ident;
     
+	static Elemento parse(string json, bool integers);
     static Elemento parse(string json);
     
     //string escape utilities
@@ -54,6 +59,8 @@ public:
     void clear();
     Raiz* copy();
     
+	string toString(bool pretty, int identation);
+	string toString(bool pretty);
     string toString();
 };
 
@@ -78,7 +85,7 @@ public:
     void set_unsc_string(string unsc_s, bool clearold);
     void set_vector(vector<Elemento>* a, bool clearold);
     void set_root(Raiz* r, bool clearold);
-    void set_boolean(bool b, bool clearold);
+    void set_bool(bool b, bool clearold);
     void set_integer(int e, bool clearold);
     void set_float(float f, bool clearold);
     
@@ -87,13 +94,15 @@ public:
     string get_unsc_string();
     vector<Elemento>* get_vector();
     Raiz* get_root();
-    bool get_boolean();
+    bool get_bool();
     int get_integer();
     float get_float();
     
     void clear();
     Elemento copy();
     
+	string toString(bool pretty, int identation);
+	string toString(bool pretty);
     string toString();
 };
 
@@ -107,6 +116,8 @@ public:
 
     Nodo copy();
     
+	string toString(bool pretty, int identation);
+	string toString(bool pretty);
     string toString();
 };
 

@@ -1,6 +1,7 @@
 package JJSON;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Elemento {
     public static final char JJSON_Null=0;
@@ -12,7 +13,7 @@ public class Elemento {
     public static final char JJSON_Float=6;
     
     private String string=null;
-    private ArrayList<Elemento> vector=null;
+    private List<Elemento> vector=null;
     private Raiz raiz=null;
     private Boolean boleano=null;
     private Integer numero_entero=null;
@@ -22,7 +23,7 @@ public class Elemento {
     
     public Elemento() {set_null();}
     public Elemento(String s, boolean escaped) {if (escaped) set_string(s); else set_unsc_string(s);}
-    public Elemento(ArrayList<Elemento> a) {set_vector(a);}
+    public Elemento(List<Elemento> a) {set_vector(a);}
     public Elemento(Raiz r){set_root(r);}
     public Elemento(boolean b){set_boolean(b);}
     public Elemento(int e) {set_integer(e);}
@@ -31,7 +32,7 @@ public class Elemento {
     public void set_null() {clear();tipo=JJSON_Null;}
     public void set_string(String s) {clear(); string=s; tipo=JJSON_String;}
     public void set_unsc_string(String unsc_s) {clear(); string=JJSON.escape(unsc_s); tipo=JJSON_String;}
-    public void set_vector(ArrayList<Elemento> a) {clear(); vector=a;tipo=JJSON_Vector;}
+    public void set_vector(List<Elemento> a) {clear(); vector=a;tipo=JJSON_Vector;}
     public void set_root(Raiz r){clear(); raiz=r;tipo=JJSON_Root;}
     public void set_boolean(boolean b){clear(); boleano=b;tipo=JJSON_Boolean;}
     public void set_integer(int e) {clear(); numero_entero=e;tipo=JJSON_Integer;}
@@ -40,7 +41,7 @@ public class Elemento {
     public char get_tipo() {return tipo;}
     public String get_string() {return string;}
     public String get_unsc_string() {return JJSON.unescape(string);}
-    public ArrayList<Elemento> get_vector() {return vector;}
+    public List<Elemento> get_vector() {return vector;}
     public Raiz get_root(){return raiz;}
     public boolean get_boolean(){return boleano;}
     public int get_integer() {return numero_entero;}
@@ -99,8 +100,7 @@ public class Elemento {
         }
     }
     
-    @Override
-    public String toString() {
+    public String toString(boolean pretty, int identation) {
         switch(tipo)
         {
             case JJSON_Float:
@@ -115,14 +115,16 @@ public class Elemento {
             case JJSON_String:
                 return "\""+string+"\"";
             case JJSON_Root:
-                return raiz.toString();
+                return raiz.toString(pretty,identation);
             case JJSON_Vector:
                 String res="[";
                 if (vector.size()>0)
                 {
-                    for (int i=0;i<vector.size()-1;i++)
-                        res+=vector.get(i).toString()+",";
-                    res+=vector.get(vector.size()-1).toString();
+                    for (int i=0;i<vector.size()-1;i++) {
+                        res+=vector.get(i).toString(pretty,identation)+",";
+                        if (pretty) res+=' ';
+                    }
+                    res+=vector.get(vector.size()-1).toString(pretty,identation);
                 }
                 res+="]";
                 return res;
@@ -131,5 +133,14 @@ public class Elemento {
             default:
                 return "";                
         }
+    }
+    
+    public String toString(boolean pretty) {
+    	return toString(pretty,0);
+    }
+    
+    @Override
+    public String toString() {
+    	return toString(false);
     }
 }

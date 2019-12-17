@@ -4,12 +4,8 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    
-    JJSON::JJSON_Integers=true;                                                                         //Leemos los números del JSON como enteros
     string in="{ \"palabras\":[\"\\\"hola\",\"mundo\\\"\",\"lorem\",\"\\nipsum\",\"noprocesa\"],\"procesa\":4}";
-
-    Elemento obtenido = JJSON::parse(in);
-    
+    Elemento obtenido = JJSON::parse(in,true);															//Leemos los números del JSON como enteros
     Nodo* el=obtenido.get_root()->remove("procesa");                                                    //Obtenemos una copia del nodo "procesa" y lo eliminamos
     int nelementos=el->elemento.get_integer();                                                          //Obtenemos numero de elementos (nodo "procesa")
     //el->elemento.clear();                                                                             //Si procesa contuviera un string, vector, o raiz liberaríamos sus memorias.
@@ -35,7 +31,7 @@ int main(int argc, char** argv) {
         resultados->push_back(Elemento(new Raiz(arrayresultado)));             //Insertamos en el array resultados una nueva raiz con el array de nodos
     }
     obtenido.get_root()->nodos.push_back(Nodo("resultados",Elemento(resultados)));   //insertamos un nuevo nodo con el vector resultados
-    string out=obtenido.toString();
+    string out=obtenido.toString(true);
     obtenido.clear();
     cout << out << "\n";
     return 0;

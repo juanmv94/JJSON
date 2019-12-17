@@ -1,11 +1,12 @@
 package JJSON;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Raiz {
-    public ArrayList<Nodo> nodos;
+    public List<Nodo> nodos;
     
-    public Raiz(ArrayList<Nodo> n) {nodos=n;}
+    public Raiz(List<Nodo> n) {nodos=n;}
     
     public Nodo find(String s)
     {
@@ -25,7 +26,7 @@ public class Raiz {
     
     public Raiz copy()
     {
-        ArrayList<Nodo> arr=new ArrayList<>();
+        List<Nodo> arr=new ArrayList<>();
         for (int i=0;i<nodos.size();i++)
         {
             arr.add(nodos.get(i).copy());
@@ -33,16 +34,40 @@ public class Raiz {
         return new Raiz(arr);
     }
     
-    @Override
-    public String toString() {
-        String res="{";
-        if (nodos.size()>0)
+    public String toString(boolean pretty, int identation) {
+        String res="";
+        if (pretty) {
+        	if (identation>0) res+='\n';
+        	for (int n=0;n<identation;n++) res+=JJSON.JJSON_Ident;
+        	identation++;
+        }
+        res+="{";
+        if (!nodos.isEmpty())
         {
-            for (int i=0;i<nodos.size()-1;i++)
-                res+=nodos.get(i).toString()+",";
-            res+=nodos.get(nodos.size()-1).toString();
+            for (int i=0;i<nodos.size();i++) {
+            	if (pretty) {
+            		res+='\n';
+                	for (int n=0;n<identation;n++) res+=JJSON.JJSON_Ident;
+            	}
+            	res+=nodos.get(i).toString(pretty,identation);
+                if (i!=nodos.size()-1) res+=",";
+            }
+        }
+        if (pretty) {
+        	identation--;
+        	res+='\n';
+        	for (int n=0;n<identation;n++) res+=JJSON.JJSON_Ident;
         }
         res+="}";
         return res;
+    }
+    
+    public String toString(boolean pretty) {
+    	return toString(pretty,0);
+    }
+    
+    @Override
+    public String toString() {
+    	return toString(false);
     }
 }

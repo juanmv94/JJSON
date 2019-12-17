@@ -11,8 +11,20 @@ public class Nodo {
         return new Nodo(nombre,elemento.copy());
     }
     
+    
+    public String toString(boolean pretty, int identation) {
+        String res="\""+nombre+"\":";
+        if (pretty) res+=' ';
+        res+=elemento.toString(pretty,identation);
+        return res;
+    }
+    
+    public String toString(boolean pretty) {
+    	return toString(pretty,0);
+    }
+    
     @Override
     public String toString() {
-        return "\""+nombre+"\":"+elemento.toString();
+    	return toString(false);
     }
 }

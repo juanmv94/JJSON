@@ -7,98 +7,97 @@
 //JJSON
 //////////////
 
-bool JJSON::JJSON_Integers=false;
-int JJSON::position;
+string JJSON::JJSON_Ident="  ";
 
-string JJSON::getJSONstr(string json)
+string JJSON::getJSONstr(JSONparseData *pd)
 {
-    int initpos=position;
+    int initpos=pd->position;
     try
     {
-        while (json.at(position)!='"')
+        while (pd->json.at(pd->position)!='"')
         {
-            if (json.at(position)=='\\') position+=2;
-            else position++;
+            if (pd->json.at(pd->position)=='\\') pd->position+=2;
+            else pd->position++;
         }
-        return json.substr(initpos, (position++)-initpos);
+        return pd->json.substr(initpos, (pd->position++)-initpos);
     }
     catch(const out_of_range& e)
     {
-        return json.substr(initpos, position-initpos);
+        return pd->json.substr(initpos, pd->position-initpos);
     }
 }
 
-int JJSON::getJSONint(string json)
+int JJSON::getJSONint(JSONparseData *pd)
 {
-    int initpos=position;
+    int initpos=pd->position;
     char cur;
     try
     {
         do {
-            cur=json.at(++position);
+            cur=pd->json.at(++pd->position);
         }
         while (((cur>='0')&&(cur<='9')) || cur=='-' || cur=='+');
     }
     catch(const out_of_range& e) {}
     
-    return atoi(json.substr(initpos, position-initpos).c_str());
+    return atoi(pd->json.substr(initpos, pd->position-initpos).c_str());
 }
 
-float JJSON::getJSONfloat(string json)
+float JJSON::getJSONfloat(JSONparseData *pd)
 {
-    int initpos=position;
+    int initpos=pd->position;
     char cur;
     try
     {
         do {
-            cur=json.at(++position);
+            cur=pd->json.at(++pd->position);
         }
         while (((cur>='0')&&(cur<='9')) || cur=='-' || cur=='+' || cur=='.');
     }
     catch(const out_of_range& e) {}
     
-    return atof(json.substr(initpos, position-initpos).c_str());
+    return atof(pd->json.substr(initpos, pd->position-initpos).c_str());
 }
 
-vector<Elemento>* JJSON::getJSONvec(string json)
+vector<Elemento>* JJSON::getJSONvec(JSONparseData *pd)
 {
     vector<Elemento>* arr=new vector<Elemento>();
     try
     {
-        while (json.at(position)!=']')
+        while (pd->json.at(pd->position)!=']')
         {
-            arr->push_back(getJSON(json));
-            while ((json.at(position)!=',') && (json.at(position)!=']')) position++;
+            arr->push_back(getJSON(pd));
+            while ((pd->json.at(pd->position)!=',') && (pd->json.at(pd->position)!=']')) pd->position++;
         }
     }
     catch(const out_of_range& e) {}
     return arr;
 }
 
-Raiz* JJSON::getJSONraiz(string json)
+Raiz* JJSON::getJSONraiz(JSONparseData *pd)
 {
     vector<Nodo> nodos;
     try {
         while (true)
         {
-            switch(json.at(position))
+            switch(pd->json.at(pd->position))
             {
                 case '"':
                 {
-                    position++;
-                    string nombre=getJSONstr(json);
-                    while (json.at(position)!=':') position++;
-                    Elemento e=getJSON(json);
+                    pd->position++;
+                    string nombre=getJSONstr(pd);
+                    while (pd->json.at(pd->position)!=':') pd->position++;
+                    Elemento e=getJSON(pd);
                     nodos.push_back(Nodo(nombre,e));
                     break;
                 }
                 case '}':
                 {
-                    position++;
+                    pd->position++;
                     return new Raiz(nodos);
                 }
                 default:
-                    position++;
+                    pd->position++;
             }
         }
     }
@@ -108,42 +107,42 @@ Raiz* JJSON::getJSONraiz(string json)
     }
 }
 
-Elemento JJSON::getJSON(string json)
+Elemento JJSON::getJSON(JSONparseData *pd)
 {
     try {
         while (true)
         {
-            switch(json.at(position))
+            switch(pd->json.at(pd->position))
             {
                 case '[':
                 {
-                    position++;
-                    return Elemento(getJSONvec(json));
+                    pd->position++;
+                    return Elemento(getJSONvec(pd));
                 }
                 case '{':
                 {
-                    position++;
-                    Raiz* r=getJSONraiz(json);
+                    pd->position++;
+                    Raiz* r=getJSONraiz(pd);
                     return Elemento(r);
                 }
                 case '"':
                 {
-                    position++;
-                    return Elemento(new string(getJSONstr(json)));
+                    pd->position++;
+                    return Elemento(new string(getJSONstr(pd)));
                 }
                 case 't':
                 {
-                    position+=4;
+                    pd->position+=4;
                     return Elemento(true);
                 }
                 case 'f':
                 {
-                    position+=5;
+                    pd->position+=5;
                     return Elemento(false);
                 }
                 case 'n':
                 {
-                    position+=4;
+                    pd->position+=4;
                     return Elemento();
                 }
                 case '0':
@@ -159,13 +158,13 @@ Elemento JJSON::getJSON(string json)
                 case '-':
                 case '+':
                 {
-                    if (JJSON_Integers)
-                        return Elemento(getJSONint(json));
+                    if (pd->integers)
+                        return Elemento(getJSONint(pd));
                     else
-                        return Elemento(getJSONfloat(json));
+                        return Elemento(getJSONfloat(pd));
                 }
                 default:
-                    position++;
+                    pd->position++;
             }
         }
     }
@@ -175,10 +174,16 @@ Elemento JJSON::getJSON(string json)
     }
 }
 
+Elemento JJSON::parse(string json, bool integers)
+{
+    JSONparseData jp={0,integers,json};
+    return getJSON(&jp);
+}
+
 Elemento JJSON::parse(string json)
 {
-    position=0;
-    return getJSON(json);
+    JSONparseData jp={0,false,json};
+    return getJSON(&jp);
 }
 
 string* JJSON::escape(string in)
@@ -311,19 +316,43 @@ void Raiz::clear()
         i->elemento.clear();
     nodos.clear();
 }
-    
-string Raiz::toString()
+
+string Raiz::toString(bool pretty, int identation)
 {
-    string res="{";
-    if (nodos.size()>0)
+    string res="";
+	if (pretty) {
+		if (identation>0) res+='\n';
+		for (int n=0;n<identation;n++) res+=JJSON::JJSON_Ident;
+    	identation++;
+    }
+    res+='{';
+    if (!nodos.empty())
     {
         vector<Nodo>::iterator i;
-        for (i=nodos.begin();i!=nodos.end()-1;i++)
-            res+=i->toString()+",";
-        res+=i->toString();
+        for (i=nodos.begin();i!=nodos.end();i++) {
+			if (pretty) {
+				res+='\n';
+				for (int n=0;n<identation;n++) res+=JJSON::JJSON_Ident;
+			}
+			res+=i->toString(pretty,identation);
+            if (i!=nodos.end()-1) res+=",";
+		}
     }
-    res+="}";
+	if (pretty) {
+		identation--;
+		res+='\n';
+		for (int n=0;n<identation;n++) res+=JJSON::JJSON_Ident;
+	}
+    res+='}';
     return res;
+}
+string Raiz::toString(bool pretty)
+{
+	return toString(pretty,0);
+}
+string Raiz::toString()
+{
+	return toString(false);
 }
 
 ////////////////
@@ -339,9 +368,24 @@ Nodo Nodo::copy()
     return Nodo(nombre,elemento.copy());
 }
 
-string Nodo::toString() {
-        return "\""+nombre+"\":"+elemento.toString();
+string Nodo::toString(bool pretty, int identation)
+{
+	string res="\""+nombre+"\":";
+	if (pretty) res+=' ';
+	res+=elemento.toString(pretty,identation);
+	return res;
 }
+    
+string Nodo::toString(bool pretty)
+{
+	return toString(pretty,0);
+}
+
+string Nodo::toString()
+{
+	return toString(false);
+}
+
 
 ////////////////
 //Elemento
@@ -369,7 +413,7 @@ Elemento::Elemento(Raiz* r)
 }
 Elemento::Elemento(bool b)
 {
-    set_boolean(b,false);
+    set_bool(b,false);
 }
 Elemento::Elemento(int e)
 {
@@ -435,10 +479,10 @@ void Elemento::set_root(Raiz* r, bool clearold)
     tipo=JJSON_Root;
     elemento=r;
 }
-void Elemento::set_boolean(bool b, bool clearold)
+void Elemento::set_bool(bool b, bool clearold)
 {
     if (clearold) clear();
-    tipo=JJSON_Boolean;
+    tipo=JJSON_bool;
     *(bool*)(&elemento)=b;
 }
 void Elemento::set_integer(int e, bool clearold)
@@ -474,7 +518,7 @@ Raiz* Elemento::get_root()
 {
     return (Raiz*)elemento;
 }
-bool Elemento::get_boolean()
+bool Elemento::get_bool()
 {
     return *(bool*)(&elemento);
 }
@@ -495,8 +539,8 @@ Elemento Elemento::copy()
             return Elemento(get_float());
         case JJSON_Integer:
             return Elemento(get_integer());
-        case JJSON_Boolean:
-            return Elemento(get_boolean());
+        case JJSON_bool:
+            return Elemento(get_bool());
         case JJSON_String:
             return Elemento(new string(*get_string()));
         case JJSON_Root:
@@ -515,7 +559,7 @@ Elemento Elemento::copy()
         }
 }
     
-string Elemento::toString()
+string Elemento::toString(bool pretty, int identation)
 {
     switch(tipo)
        {
@@ -531,9 +575,9 @@ string Elemento::toString()
                 ss << get_integer();
                 return ss.str();
             }
-            case JJSON_Boolean:
+            case JJSON_bool:
             {
-                if (get_boolean())
+                if (get_bool())
                     return "true";
                 else
                     return "false";
@@ -541,16 +585,18 @@ string Elemento::toString()
             case JJSON_String:
                 return '\"'+*get_string()+'\"';
             case JJSON_Root:
-                return get_root()->toString();
+                return get_root()->toString(pretty,identation);
             case JJSON_Vector:
             {
                 string res="[";
                 vector<Elemento>* orig=(vector<Elemento>*)elemento;
                 if (orig->size()>0)
                 {
-                    for (vector<Elemento>::iterator i=orig->begin();i!=orig->end()-1;i++)
-                        res+=i->toString()+',';
-                    res+=orig->at(orig->size()-1).toString();
+                    for (vector<Elemento>::iterator i=orig->begin();i!=orig->end()-1;i++) {
+                        res+=i->toString(pretty, identation)+',';
+						if (pretty) res+=' ';
+					}
+                    res+=orig->at(orig->size()-1).toString(pretty, identation);
                 }
                 res+=']';
                 return res;
@@ -560,4 +606,14 @@ string Elemento::toString()
             default:
                 return "";                
         }
+}
+
+string Elemento::toString(bool pretty)
+{
+	return toString(pretty,0);
+}
+
+string Elemento::toString()
+{
+	return toString(false);
 }
