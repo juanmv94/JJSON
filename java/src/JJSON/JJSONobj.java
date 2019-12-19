@@ -1,13 +1,8 @@
 package JJSON;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.beans.*;
+import java.lang.reflect.*;
+import java.util.*;
 
 public class JJSONobj {
 	public static Elemento parse(Object o) {
@@ -16,27 +11,19 @@ public class JJSONobj {
 		if (o instanceof String) {
 			return new Elemento((String)o,false);
 		} else if (o instanceof Character) {
-			return new Elemento(o.toString(),false);
-		} else if (o.getClass()==char.class) {
-			new Elemento(Character.toString((char)o),false);
+			return new Elemento((Character)o);
 		} else if (o instanceof Integer) {
-			return new Elemento(((Integer)o).intValue());
+			return new Elemento((Integer)o);
 		} else if (o instanceof Long) {
-			return new Elemento(((Long)o).intValue());
+			return new Elemento((Long)o);
 		} else if (o instanceof Short) {
 			return new Elemento(((Short)o).intValue());
-		} else if (o.getClass()==int.class || o.getClass()==long.class || o.getClass()==short.class) {
-			new Elemento((int)o);
 		} else if (o instanceof Float) {
-			return new Elemento(((Float)o).floatValue());
+			return new Elemento(((Float)o));
 		} else if (o instanceof Double) {
-			return new Elemento(((Double)o).floatValue());
-		} else if (o.getClass()==float.class || o.getClass()==double.class) {
-			return new Elemento((float)o);
+			return new Elemento((Double)o);
 		} else if (o instanceof Boolean) {
 			return new Elemento(((Boolean)o).booleanValue());
-		} else if (o.getClass()==boolean.class) {
-			return new Elemento((boolean)o);
 		} else if (o instanceof Collection<?>) {
 			List<Elemento> l=new ArrayList<>();
 			for (Object ob : (Collection)o) {
@@ -49,6 +36,29 @@ public class JJSONobj {
 				l.add(parse(ob));
 			}
 			return new Elemento(l);
+		} else if (o.getClass().isArray()) {
+			try {
+				List<Elemento> l=new ArrayList<>();
+				Constructor<Elemento> c=Elemento.class.getConstructor(o.getClass().getComponentType());
+				for (int i=0; i<Array.getLength(o); i++) {
+					l.add(c.newInstance(Array.get(o, i)));
+				}
+				return new Elemento(l);
+			} catch (NoSuchMethodException e) {
+				return new Elemento();
+			} catch (SecurityException e) {
+				return new Elemento();
+			} catch (ArrayIndexOutOfBoundsException e) {
+				return new Elemento();
+			} catch (InstantiationException e) {
+				return new Elemento();
+			} catch (IllegalAccessException e) {
+				return new Elemento();
+			} catch (IllegalArgumentException e) {
+				return new Elemento();
+			} catch (InvocationTargetException e) {
+				return new Elemento();
+			}
 		}
 		
 		try {
@@ -57,6 +67,9 @@ public class JJSONobj {
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getName().equals("class")) continue;
 				Method m=pd.getReadMethod();
+				if(!m.isAccessible()) {
+				      m.setAccessible(true);
+				 }
 				Object ob=m.invoke(o);
 				nodos.add(new Nodo(pd.getName(),parse(ob)));
 			}

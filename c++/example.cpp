@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     string in="{ \"palabras\":[\"\\\"hola\",\"mundo\\\"\",\"lorem\",\"\\nipsum\",\"noprocesa\"],\"procesa\":4}";
     Elemento obtenido = JJSON::parse(in,true);															//Leemos los números del JSON como enteros
     Nodo* el=obtenido.get_root()->remove("procesa");                                                    //Obtenemos una copia del nodo "procesa" y lo eliminamos
-    int nelementos=el->elemento.get_integer();                                                          //Obtenemos numero de elementos (nodo "procesa")
+    int nelementos=el->elemento.get_int();                                                          //Obtenemos numero de elementos (nodo "procesa")
     //el->elemento.clear();                                                                             //Si procesa contuviera un string, vector, o raiz liberaríamos sus memorias.
     delete el;                                                                                          //Ya no necesitamos la copia                                           
     Nodo* nodopalabras=obtenido.get_root()->find("palabras");                                           //Obtenemos nodo "palabras"

@@ -1,4 +1,4 @@
-package JJSON;
+package examples;
 import JJSON.*;
 import java.util.ArrayList;
 import java.util.List;

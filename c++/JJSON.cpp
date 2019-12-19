@@ -9,7 +9,7 @@
 
 string JJSON::JJSON_Ident="  ";
 
-string JJSON::getJSONstr(JSONparseData *pd)
+string JJSON::getJSONstr(JJSONparseData *pd)
 {
     int initpos=pd->position;
     try
@@ -27,7 +27,7 @@ string JJSON::getJSONstr(JSONparseData *pd)
     }
 }
 
-int JJSON::getJSONint(JSONparseData *pd)
+long long JJSON::getJSONinteger(JJSONparseData *pd)
 {
     int initpos=pd->position;
     char cur;
@@ -40,10 +40,10 @@ int JJSON::getJSONint(JSONparseData *pd)
     }
     catch(const out_of_range& e) {}
     
-    return atoi(pd->json.substr(initpos, pd->position-initpos).c_str());
+    return atoll(pd->json.substr(initpos, pd->position-initpos).c_str());
 }
 
-float JJSON::getJSONfloat(JSONparseData *pd)
+double JJSON::getJSONfloat(JJSONparseData *pd)
 {
     int initpos=pd->position;
     char cur;
@@ -59,7 +59,7 @@ float JJSON::getJSONfloat(JSONparseData *pd)
     return atof(pd->json.substr(initpos, pd->position-initpos).c_str());
 }
 
-vector<Elemento>* JJSON::getJSONvec(JSONparseData *pd)
+vector<Elemento>* JJSON::getJSONvec(JJSONparseData *pd)
 {
     vector<Elemento>* arr=new vector<Elemento>();
     try
@@ -74,7 +74,7 @@ vector<Elemento>* JJSON::getJSONvec(JSONparseData *pd)
     return arr;
 }
 
-Raiz* JJSON::getJSONraiz(JSONparseData *pd)
+Raiz* JJSON::getJSONraiz(JJSONparseData *pd)
 {
     vector<Nodo> nodos;
     try {
@@ -107,7 +107,7 @@ Raiz* JJSON::getJSONraiz(JSONparseData *pd)
     }
 }
 
-Elemento JJSON::getJSON(JSONparseData *pd)
+Elemento JJSON::getJSON(JJSONparseData *pd)
 {
     try {
         while (true)
@@ -159,7 +159,7 @@ Elemento JJSON::getJSON(JSONparseData *pd)
                 case '+':
                 {
                     if (pd->integers)
-                        return Elemento(getJSONint(pd));
+                        return Elemento(getJSONinteger(pd));
                     else
                         return Elemento(getJSONfloat(pd));
                 }
@@ -176,13 +176,13 @@ Elemento JJSON::getJSON(JSONparseData *pd)
 
 Elemento JJSON::parse(string json, bool integers)
 {
-    JSONparseData jp={0,integers,json};
+    JJSONparseData jp={0,integers,json};
     return getJSON(&jp);
 }
 
 Elemento JJSON::parse(string json)
 {
-    JSONparseData jp={0,false,json};
+    JJSONparseData jp={0,false,json};
     return getJSON(&jp);
 }
 
@@ -403,6 +403,10 @@ Elemento::Elemento(string unsc_s)
 {
     set_unsc_string(unsc_s,false);
 }
+Elemento::Elemento(char c)
+{
+    set_char(c,false);
+}
 Elemento::Elemento(vector<Elemento>* a)
 {
     set_vector(a,false);
@@ -413,11 +417,23 @@ Elemento::Elemento(Raiz* r)
 }
 Elemento::Elemento(bool b)
 {
-    set_bool(b,false);
+    set_boolean(b,false);
 }
-Elemento::Elemento(int e)
+Elemento::Elemento(long long l)
 {
-    set_integer(e,false);
+    set_long(l,false);
+}
+Elemento::Elemento(int i)
+{
+    set_int(i,false);
+}
+Elemento::Elemento(short s)
+{
+    set_short(s,false);
+}
+Elemento::Elemento(double d)
+{
+    set_double(d,false);
 }
 Elemento::Elemento(float f)
 {
@@ -432,18 +448,16 @@ void Elemento::clear()
 {
     if (tipo==JJSON_Root)
     {
-        Raiz* r=(Raiz*)elemento;
-        r->clear();
-        delete r;
+        ob.r->clear();
+        delete ob.r;
     }
     else if (tipo==JJSON_String)
-        delete (string*)elemento;
+        delete ob.s;
     else if (tipo==JJSON_Vector)
     {
-        vector<Elemento>* v=(vector<Elemento>*)elemento;
-        for (vector<Elemento>::iterator i=v->begin();i!=v->end();i++)
+        for (vector<Elemento>::iterator i=ob.v->begin();i!=ob.v->end();i++)
             i->clear();
-        delete v;
+        delete ob.v;
     }
     tipo=JJSON_Null;
 }
@@ -453,49 +467,74 @@ void Elemento::set_null(bool clearold)
     if (clearold) clear();
     else tipo=JJSON_Null;
 }
-void Elemento::set_string(string* s,bool clearold)
+void Elemento::set_string(string* s, bool clearold)
 {
     if (clearold) clear();
     tipo=JJSON_String;
-    elemento=s;
+    ob.s=s;
 }
 
-void Elemento::set_unsc_string(string unsc_s,bool clearold)
+void Elemento::set_unsc_string(string unsc_s, bool clearold)
 {
     if (clearold) clear();
     tipo=JJSON_String;
-    elemento=JJSON::escape(unsc_s);
+    ob.s=JJSON::escape(unsc_s);
+}
+
+void Elemento::set_char(char c, bool clearold)
+{
+    if (clearold) clear();
+    tipo=JJSON_String;
+    ob.s=JJSON::escape(string(1,c));
 }
 
 void Elemento::set_vector(vector<Elemento>* a, bool clearold)
 {
     if (clearold) clear();
     tipo=JJSON_Vector;
-    elemento=a;
+    ob.v=a;
 }
 void Elemento::set_root(Raiz* r, bool clearold)
 {
     if (clearold) clear();
     tipo=JJSON_Root;
-    elemento=r;
+    ob.r=r;
 }
-void Elemento::set_bool(bool b, bool clearold)
+void Elemento::set_boolean(bool b, bool clearold)
 {
     if (clearold) clear();
-    tipo=JJSON_bool;
-    *(bool*)(&elemento)=b;
+    tipo=JJSON_Boolean;
+    ob.b=b;
 }
-void Elemento::set_integer(int e, bool clearold)
+void Elemento::set_long(long long l, bool clearold)
 {
     if (clearold) clear();
     tipo=JJSON_Integer;
-    *(int*)(&elemento)=e;
+    ob.i=l;
+}
+void Elemento::set_int(int i, bool clearold)
+{
+    if (clearold) clear();
+    tipo=JJSON_Integer;
+    ob.i=static_cast<long long>(i);
+}
+void Elemento::set_short(short s, bool clearold)
+{
+    if (clearold) clear();
+    tipo=JJSON_Integer;
+    ob.i=static_cast<long long>(s);
+}
+void Elemento::set_double(double d, bool clearold)
+{
+    if (clearold) clear();
+    tipo=JJSON_Float;
+    ob.f=d;
 }
 void Elemento::set_float(float f, bool clearold)
 {
     if (clearold) clear();
     tipo=JJSON_Float;
-    *(float*)(&elemento)=f;
+    ob.f=static_cast<double>(f);
 }
     
 char Elemento::get_tipo()
@@ -504,31 +543,39 @@ char Elemento::get_tipo()
 }
 string* Elemento::get_string()
 {
-    return (string*)elemento;
+    return ob.s;
 }
 string Elemento::get_unsc_string()
 {
-    return JJSON::unescape(*(string*)elemento);
+    return JJSON::unescape(*ob.s);
 }
 vector<Elemento>* Elemento::get_vector()
 {
-    return (vector<Elemento>*)(elemento);
+    return ob.v;
 }
 Raiz* Elemento::get_root()
 {
-    return (Raiz*)elemento;
+    return ob.r;
 }
-bool Elemento::get_bool()
+bool Elemento::get_boolean()
 {
-    return *(bool*)(&elemento);
+    return ob.b;
 }
-int Elemento::get_integer()
+long long Elemento::get_long()
 {
-    return *(int*)(&elemento);
+    return ob.i;
+}
+int Elemento::get_int()
+{
+    return static_cast<int>(ob.i);
+}
+double Elemento::get_double()
+{
+    return ob.f;
 }
 float Elemento::get_float()
 {
-    return *(float*)(&elemento);
+    return static_cast<float>(ob.f);
 }
     
 Elemento Elemento::copy()
@@ -536,11 +583,11 @@ Elemento Elemento::copy()
     switch(tipo)
     {
         case JJSON_Float:
-            return Elemento(get_float());
+            return Elemento(get_double());
         case JJSON_Integer:
-            return Elemento(get_integer());
-        case JJSON_bool:
-            return Elemento(get_bool());
+            return Elemento(get_long());
+        case JJSON_Boolean:
+            return Elemento(get_boolean());
         case JJSON_String:
             return Elemento(new string(*get_string()));
         case JJSON_Root:
@@ -548,7 +595,7 @@ Elemento Elemento::copy()
         case JJSON_Vector:
         {
             vector<Elemento>* arr= new vector<Elemento>();
-            vector<Elemento>* orig=(vector<Elemento>*)elemento;
+            vector<Elemento>* orig=ob.v;
             for (vector<Elemento>::iterator i=orig->begin();i!=orig->end();i++)
                 arr->push_back(i->copy());
             return Elemento(arr);
@@ -566,18 +613,18 @@ string Elemento::toString(bool pretty, int identation)
             case JJSON_Float:
             {
                 ostringstream ss;
-                ss << get_float();
+                ss << get_double();
                 return ss.str();
             }
             case JJSON_Integer:
             {
                 ostringstream ss;
-                ss << get_integer();
+                ss << get_long();
                 return ss.str();
             }
-            case JJSON_bool:
+            case JJSON_Boolean:
             {
-                if (get_bool())
+                if (get_boolean())
                     return "true";
                 else
                     return "false";
@@ -589,14 +636,14 @@ string Elemento::toString(bool pretty, int identation)
             case JJSON_Vector:
             {
                 string res="[";
-                vector<Elemento>* orig=(vector<Elemento>*)elemento;
-                if (orig->size()>0)
+                if (!ob.v->empty())
                 {
-                    for (vector<Elemento>::iterator i=orig->begin();i!=orig->end()-1;i++) {
+					vector<Elemento>::iterator i;
+                    for (i=ob.v->begin();i!=ob.v->end()-1;i++) {
                         res+=i->toString(pretty, identation)+',';
 						if (pretty) res+=' ';
 					}
-                    res+=orig->at(orig->size()-1).toString(pretty, identation);
+                    res+=i->toString(pretty, identation);
                 }
                 res+=']';
                 return res;

@@ -20,10 +20,10 @@ JJSON is an easy way to manage JSON data in Java/C++ thanks to the following cla
 
 * **Element (Elemento)** with the following categories:
  * **String\*:** *"hello world"*
- * **Number(int):** *123*
- * **Number(float):** *123.45*
- * **Vector \*:** *[Element, Element, ...]*
- * **Root \*:** *{Node, Node, ...}*
+ * **Number (Integer):** *123*
+ * **Number (Floating point):** *123.45*
+ * **Vector \*:** *[Elemento, Elemento, ...]*
+ * **Root \*:** *{Nodo, Nodo, ...}*
 
 (" \* " means pointer for the C++ version)
 
@@ -44,33 +44,37 @@ Check the example for both platforms to understand how does it work. This exampl
  * Adds the new root to the results vector.
 * Prints the result as JSON string
 
+There's also an aditional example for the Java version for bean (Object with getters) parsing, which is a Java exclusive feature of JJSON.
+
 
 ### The JJSON class
 
-The JJSON class has only static members, and you shouldn't create an instance of it.
+The JJSON class has only static members, and you shouldn't create an instance of it. It has the following public properties:
 
-* boolean **JJSON_Integers**: if true, JSON numbers are read as integers.
-* Elemento **parse(string json)**: returns a JJSON element from a JSON string.
+* string **JJSON_Ident**: the identation character(s) for pretty printing. It is 2 white spaces by default.
+* long **JJSON_Bad_Integer** (Java only): value returned when integer parsing fails caused by a wrong number format (Example: `"number":-53+3+64`). It is 0 by default.
+* double **JJSON_Bad_Float** (Java only): value returned when floating point parsing fails caused by a wrong number format (Example: `"number":-53+3+64`). It is 0 by default.
+
+Functions:
+
+* Elemento **parse(string json)**: returns a JJSON element from a JSON string. Numbers are parsed as floating point which is the recomended.
+* Elemento **parse(string json, boolean integers)**: returns a JJSON element from a JSON string. Numbers are parsed as integers or floating point depending on the **integers** parameter.
 
 The following JJSON funtions manages string escaping:
 
 * string **escape(string in)**: escapes a string. That means replacing for example the **"** character from a string with **\\"**. This is needed for JSON strings. The constructor for unescaped strings and the **set\_unsc\_string** function from *Elemento* calls this.
 * string **unescape(string in)**: unescapes a string. That means replacing for example **\\"** from a string with the **"** character. The **get\_unsc\_string()** function from *Elemento* calls this.
 
-In hava version you also have:
-
-* int **JJSON\_Bad\_Int**: default value parsed when a JSON integer has wrong format. Example: `"number":-53+3+64`
-* float **JJSON\_Bad\_Float**: default value parsed when a JSON float has wrong format. Example: `"number":53.6.4+34`
-
 ### Constructors (to generate new JSON content)
 
 * **Raiz()**: it takes a Node array(Java) / vector(C++) that you should create first.
-* **Elemento()**: it's contructor can take one of its valid categories elements listed before
- * **String\[\*\]:** *"hello world"*
- * **Number(int):** *123*
- * **Number(float):** *123.45*
- * **Vector \*:** *[Element, Element, ...]*
- * **Root \*:** *{Node, Node, ...}*
+* **Elemento()**: it's contructor can take one of its valid categories elements listed here:
+ * **String(\*):** *"hello world"*
+ * **Char:** *'A'*
+ * **Number(long, int, short):** *123*
+ * **Number(double, float):** *123.45*
+ * **Vector/List of Elemento \*:** *[Elemento, Elemento, ...]*
+ * **Root \*:** *{Nodo, Nodo, ...}*
 
 For string constructors, the string can be escaped or not. In Java, you pass a second boolean argument "*escaped*" to the constructor, while in c++ you use the **string** constructor for unescaped strings, and the **string\*** constructor for escaped strings (this allows to easy reuse existing string pointers of escaped JSON strings, but you must be careful when clearing and don't make pointers to be deleted twice).
 
@@ -93,7 +97,7 @@ For string constructors, the string can be escaped or not. In Java, you pass a s
 
 ##### Only C++
 * **clear()**: it calls **clear()** in all their node elements and empties the root.
-* **del(string s, bool clearelement)**: same as **remove()** but it doesn't copy the removed element. Second boolean argument calls **clear()** in the found node if true.
+* **del(string s, bool clearelement)**: same as **remove()** but it doesn't gives you a copy of the removed element. Second boolean argument calls **clear()** in the found node if true.
 
 ### Elemento
 ##### Java and C++
@@ -106,12 +110,13 @@ For string constructors, the string can be escaped or not. In Java, you pass a s
   * *JJSON_Boolean*=4
   * *JJSON_Integer*=5
   * *JJSON_Float*=6
-* **get_\*\*\*()**: gets the actual element content.
+* **get_\*\*\*()**: gets the actual element content. For **JJSON_Integer** you can get the stored **long** value or cast it to **int**. For **JJSON_Float** you can get the stored **double** value or cast it to **float**.
 * **copy()**: makes a copy (clone) of the actual element. It also copies their sub-elements.
-* **toString()**: Prints the element value in JSON string format. 
+* **toString()**: Prints the element value as minified JSON string.
+* **toString(boolean pretty)**: Prints the element value as pretty/minified JSON string depending on the **pretty** parameter.
 
 ##### Only C++
-* **clear()**: it deletes pointers for string, root, and vector pointed elements and all it's subelements
+* **clear()**: it deletes pointers for string, root, and vector pointed elements and all it's subelements.
 
 ### C++ Notes
 The C++ implementation of JJSON compiles with the C++98 standard.
@@ -130,15 +135,17 @@ If you use the **remove()** function instead of **del()**, you must clear and de
 ##### Elemento content
 In the Elemento class, every kind of data is stored in the **void\* elemento** variable, it doesn't matter if they are pointers, or numbers. This saves a lot of memory in big JSONs when comparing to the Java version, but if you don't check **get_tipo()** and read an incorrect type of data, you will read garbage instead of **null**.
 
+### The JJSONobj class (Java only)
+This class has a single static function **parse(Object o)** that allows you to parse a Java bean object (an object from a class providing getters for it's values) into a JJSON **Elemento** of Root type. It also parses Lists and arrays into **Elemento** of Vector type.
+
 ## Reliability
 If a malformed JSON string is passed to the lib, it will try to auto-complete it at the end of the string returning a JSON object that may differ from the expected one.
 
 Java and C++ return different values for incorrect number fields in the JSON, like `"number":-53+3+64`.
-In this example, C++ parses `"number":-53` and Java parses `"number":JJSON_Bad_Int/Float`. This is because C++ atoi and stoi functions doesn't throw exceptions and gives results for the malformed number strings, while Java throws *StringIndexOutOfBoundsException* that is catched by the lib returning these predefined values.
+In this example, C++ parses `"number":-53` and Java parses `"number":JJSON_Bad_Int/Float`. This is because C++ atoll and atof functions doesn't throw exceptions and gives results for the malformed number strings, while Java throws *StringIndexOutOfBoundsException* that is catched by the lib returning these predefined values.
 
 Any JSON element starting with **t**,**f**,or **n** will be read as **true**, **false**, and **null**. Why to lose processing time checking undefined values?
 
-The lib has been slightly tested and it should not have bugs, but nothing is impossible.
+You should always check the type of data from a **Elemento** before retrieving it unless you have the certainty of having the right one. If you get the incorrect type of data in C++ you can get bad pointers, or bad numbers. If you get the incorrect data in Java you can get a ClassCastException (or NullPointerException if geting from a null value **Elemento**).
 
-## License
-JJSON was mainly made for personal use. Try it for yourself and if you like it, contact me to find it a proper license.
+You should not modify static properties of JJSON (**JJSON_Ident**, **JJSON_Bad_Integer**, **JJSON_Bad_Float**) in case they are being used by JJSON parsing/string printing with multithreading.

@@ -20,8 +20,8 @@ class JJSONparseData {
 
 public class JJSON {
     public static String JJSON_Ident="  ";          //Space for pretty identation
-    public static int JJSON_Bad_Int=0;              //Value returned for incorrect JSON number
-    public static float JJSON_Bad_Float=0;          //Value returned for incorrect JSON number
+    public static long JJSON_Bad_Integer=0;         //Value returned for incorrect JSON number
+    public static double JJSON_Bad_Float=0;          //Value returned for incorrect JSON number
     
     private static String getJSONstr(JJSONparseData pd)
     {
@@ -41,7 +41,7 @@ public class JJSON {
         }
     }
     
-    private static int getJSONint(JJSONparseData pd)
+    private static long getJSONinteger(JJSONparseData pd)
     {
         int initpos=pd.position;
         char cur;
@@ -55,15 +55,15 @@ public class JJSON {
         catch(StringIndexOutOfBoundsException e) {}
         try
         {
-            return Integer.parseInt(pd.json.substring(initpos, pd.position));
+            return Long.parseLong(pd.json.substring(initpos, pd.position));
         }
         catch(NumberFormatException e)
         {
-            return JJSON_Bad_Int;
+            return JJSON_Bad_Integer;
         }
     }
     
-    private static float getJSONfloat(JJSONparseData pd)
+    private static double getJSONfloat(JJSONparseData pd)
     {
         int initpos=pd.position;
         char cur;
@@ -77,7 +77,7 @@ public class JJSON {
         catch(StringIndexOutOfBoundsException e) {}
         try
         {
-            return Float.parseFloat(pd.json.substring(initpos, pd.position));
+            return Double.parseDouble(pd.json.substring(initpos, pd.position));
         }
         catch(NumberFormatException e)
         {
@@ -170,7 +170,7 @@ public class JJSON {
                     case '-':
                     case '+':
                         if (pd.integers)
-                            return new Elemento(getJSONint(pd));
+                            return new Elemento(getJSONinteger(pd));
                         else
                             return new Elemento(getJSONfloat(pd));
                     default:

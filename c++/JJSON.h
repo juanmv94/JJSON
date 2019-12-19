@@ -8,31 +8,40 @@
 #define JJSON_String 1
 #define JJSON_Vector 2
 #define JJSON_Root 3
-#define JJSON_bool 4
+#define JJSON_Boolean 4
 #define JJSON_Integer 5
 #define JJSON_Float 6
 
 using namespace std;
 
-typedef struct JSONparseData {
+typedef struct JJSONparseData {
 	int position;
 	bool integers;
 	string json;
-} JSONparseData;
+} JJSONparseData;
 
 class JJSON;
 class Raiz;
 class Nodo;
 class Elemento;
 
+typedef union JJSONdata {
+	long long i;
+	double f;
+	string* s;
+	vector<Elemento>* v;
+	Raiz* r;
+	bool b;
+} JJSONdata;
+
 class JJSON {
 private:
-    static string getJSONstr(JSONparseData *pd);
-    static int getJSONint(JSONparseData *pd);
-    static float getJSONfloat(JSONparseData *pd);
-    static vector<Elemento>* getJSONvec(JSONparseData *pd);
-    static Raiz* getJSONraiz(JSONparseData *pd);
-    static Elemento getJSON(JSONparseData *pd);
+    static string getJSONstr(JJSONparseData *pd);
+    static long long getJSONinteger(JJSONparseData *pd);
+    static double getJSONfloat(JJSONparseData *pd);
+    static vector<Elemento>* getJSONvec(JJSONparseData *pd);
+    static Raiz* getJSONraiz(JJSONparseData *pd);
+    static Elemento getJSON(JJSONparseData *pd);
     
 public:
     static string JJSON_Ident;
@@ -67,26 +76,34 @@ public:
 class Elemento {
 private:
     char tipo;
-    void* elemento;     //Lo usamos para almacenar cualquier cosa en sus 32-64bit (Debe poder almacenar punteros)
+    JJSONdata ob;
     
 public:
     Elemento();
     Elemento(string* s);
     Elemento(string unsc_s);
+	Elemento(char c);
     Elemento(vector<Elemento>* a);
     Elemento(Raiz* r);
     Elemento(bool b);
-    Elemento(int e);
+	Elemento(long long l);
+    Elemento(int i);
+	Elemento(short s);
+	Elemento(double d);
     Elemento(float f);
     ~Elemento();
     
     void set_null(bool clearold);
     void set_string(string* s, bool clearold);
     void set_unsc_string(string unsc_s, bool clearold);
+	void set_char(char c, bool clearold);
     void set_vector(vector<Elemento>* a, bool clearold);
     void set_root(Raiz* r, bool clearold);
-    void set_bool(bool b, bool clearold);
-    void set_integer(int e, bool clearold);
+    void set_boolean(bool b, bool clearold);
+	void set_long(long long l, bool clearold);
+    void set_int(int i, bool clearold);
+	void set_short(short s, bool clearold);
+	void set_double(double d, bool clearold);
     void set_float(float f, bool clearold);
     
     char get_tipo();
@@ -94,8 +111,10 @@ public:
     string get_unsc_string();
     vector<Elemento>* get_vector();
     Raiz* get_root();
-    bool get_bool();
-    int get_integer();
+    bool get_boolean();
+	long long get_long();
+    int get_int();
+	double get_double();
     float get_float();
     
     void clear();
