@@ -81,6 +81,8 @@ public class Elemento {
         switch(tipo)
         {
             case JJSON_Float:
+                double v=(double)ob;
+                return ((v%1)==0) ? Long.toString((long)v) : Double.toString(v);
             case JJSON_Integer:
             case JJSON_Boolean:
                 return ob.toString();
